@@ -49,7 +49,7 @@ func (suite *TestPikpakSuite) TestOfflineDownload() {
 	suite.NoError(err)
 	println(task.Task.ID)
 	suite.NotEmpty(task.Task.ID)
-	finishedTask, err := suite.client.WaitForOfflineDownloadComplete(task.Task.ID, time.Minute*1)
+	finishedTask, err := suite.client.WaitForOfflineDownloadComplete(task.Task.ID, time.Minute*1, nil)
 	suite.NoError(err)
 	println(finishedTask)
 	uri, err := suite.client.GetDownloadUrl(finishedTask.FileID)

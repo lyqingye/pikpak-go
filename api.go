@@ -238,7 +238,7 @@ Exit:
 	return nil
 }
 
-func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout time.Duration) (*Task, error) {
+func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout time.Duration, progressFn func(*Task)) (*Task, error) {
 	finished := false
 	var finishedTask *Task
 	endTime := time.Now().Add(timeout)
@@ -251,6 +251,9 @@ func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout tim
 		}
 		c.OfflineListIterator(func(task *Task) bool {
 			if task.ID == taskId {
+				if progressFn != nil {
+					progressFn(task)
+				}
 				if (task.Phase == PhaseTypeComplete && task.Progress == 100) || task.Phase == PhaseTypeError {
 					finished = true
 					finishedTask = task
