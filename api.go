@@ -42,14 +42,14 @@ func NewPikPakClient(username, password string) (*PikPakClient, error) {
 	}
 
 	client.AddRetryCondition(func(r *resty.Response, err error) bool {
+		if strings.Index(string(r.Body()), "unauthenticated") != -1 {
+			return pikpak.Login() != nil
+		}
 		if err == nil {
 			return false
 		}
 		if err != nil {
 			return true
-		}
-		if strings.Index(string(r.Body()), "unauthenticated") != -1 {
-			return pikpak.Login() != nil
 		}
 		return false
 	})
