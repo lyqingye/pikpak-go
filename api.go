@@ -222,9 +222,10 @@ func (c *PikPakClient) OfflineList(limit int, nextPageToken string) (*TaskList, 
 
 func (c *PikPakClient) OfflineListIterator(callback func(task *Task) bool) error {
 	nextPageToken := ""
+	pageSize := 100
 Exit:
 	for {
-		taskList, err := c.OfflineList(100, nextPageToken)
+		taskList, err := c.OfflineList(pageSize, nextPageToken)
 		if err != nil {
 			return err
 		}
@@ -232,6 +233,9 @@ Exit:
 			if callback(task) {
 				break Exit
 			}
+		}
+		if len(taskList.Tasks) < pageSize {
+			break Exit
 		}
 		nextPageToken = taskList.NextPageToken
 	}
