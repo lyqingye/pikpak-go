@@ -42,7 +42,7 @@ func NewPikPakClient(username, password string) (*PikPakClient, error) {
 	}
 
 	client.AddRetryCondition(func(r *resty.Response, err error) bool {
-		if strings.Index(string(r.Body()), "unauthenticated") != -1 {
+		if strings.Contains(string(r.Body()), "unauthenticated") {
 			return pikpak.Login() != nil
 		}
 		if err == nil {
@@ -245,15 +245,20 @@ Exit:
 func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout time.Duration, progressFn func(*Task)) (*Task, error) {
 	finished := false
 	var finishedTask *Task
+	var lastErr error
 	endTime := time.Now().Add(timeout)
 	for {
 		if finished {
 			return finishedTask, nil
 		}
 		if time.Now().After(endTime) {
-			return nil, errors.New("wait for offline download complete timeout")
+			if lastErr != nil {
+				return nil, lastErr
+			} else {
+				return nil, errors.New("wait for offline download complete timeout")
+			}
 		}
-		c.OfflineListIterator(func(task *Task) bool {
+		lastErr = c.OfflineListIterator(func(task *Task) bool {
 			if task.ID == taskId {
 				if progressFn != nil {
 					progressFn(task)
