@@ -70,3 +70,33 @@ func (suite *TestPikpakSuite) TestOfflineList() {
 		println(fmt.Sprintf("%s %s", f.Kind, f.ID))
 	}
 }
+
+func (suite *TestPikpakSuite) TestEmptyTrash() {
+	err := suite.client.EmptyTrash()
+	suite.NoError(err)
+}
+
+func (suite *TestPikpakSuite) TestTaskRetry() {
+	tasks, err := suite.client.OfflineList(100, "")
+	suite.NoError(err)
+	suite.NotNil(tasks)
+	for _, task := range tasks.Tasks {
+		err = suite.client.OfflineRetry(task.ID)
+		suite.NoError(err)
+	}
+}
+
+func (suite *TestPikpakSuite) TestBatchTrashFiles() {
+	err := suite.client.BatchTrashFiles([]string{
+		"VNV9ua9L2OQzryfULN72j50to1",
+		"VNVDm8wqQjBlpj7t6p3E9wsMo1",
+	})
+	suite.NoError(err)
+}
+
+func (suite *TestPikpakSuite) TestBatchDeleteFiles() {
+	err := suite.client.BatchDeleteFiles([]string{
+		"VNV9ua9L2OQzryfULN72j50to1",
+	})
+	suite.NoError(err)
+}

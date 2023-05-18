@@ -10,11 +10,12 @@ implementation pikpak sdk using golang
 - [x] OfflineDownload
 - [x] OfflineList
 - [x] WaitForOfflineDownloadComplete
+- [x] OfflineRetry
+- [x] BatchDeleteFile
+- [x] BatchTrashFile
+- [x] EmptyTrash
 
 # Work in progress
-- [ ] OfflineRetry
-- [ ] EmptyTrash
-- [ ] DeleteFile
 - [ ] MoveFile
 - [ ] BatchMoveFile
 

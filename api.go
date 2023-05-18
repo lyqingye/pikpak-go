@@ -65,12 +65,15 @@ func (c *PikPakClient) Login() error {
 		Password:     c.password,
 	}
 	resp := ResponseLogin{}
-	_, err := c.client.R().
+	originResp, err := c.client.R().
 		SetBody(&req).
 		SetResult(&resp).
 		Post(fmt.Sprintf("%s/v1/auth/signin", PIKPAK_USER_HOST))
 	if err != nil {
 		return err
+	}
+	if resp.AccessToken == "" {
+		return errRespToError(originResp.Body())
 	}
 	c.accessToken = resp.AccessToken
 	c.refreshToken = resp.RefreshToken
@@ -235,18 +238,14 @@ func (c *PikPakClient) OfflineRetry(taskId string) error {
 	if err != nil {
 		return err
 	}
-	resp, err := c.client.R().
+	_, err = c.client.R().
 		SetQueryParams(reqParams).
 		SetAuthToken(c.accessToken).
 		Get(fmt.Sprintf("%s/drive/v1/task", PIKPAK_API_HOST))
 	if err != nil {
 		return err
 	}
-	if resp.IsSuccess() {
-		return nil
-	} else {
-		return fmt.Errorf("retry task err! code: %d detail: %s", resp.StatusCode(), string(resp.Body()))
-	}
+	return nil
 }
 
 func (c *PikPakClient) OfflineListIterator(callback func(task *Task) bool) error {
@@ -302,4 +301,53 @@ func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout tim
 		})
 		time.Sleep(5 * time.Second)
 	}
+}
+
+func (c *PikPakClient) BatchTrashFiles(ids []string) error {
+	req := RequestBatch{
+		Ids: ids,
+	}
+	resp, err := c.client.R().
+		SetAuthToken(c.accessToken).
+		SetBody(&req).
+		Post(fmt.Sprintf("%s/drive/v1/files:batchTrash", PIKPAK_API_HOST))
+	if err != nil {
+		return err
+	}
+	return errRespToError(resp.Body())
+}
+
+func (c *PikPakClient) BatchDeleteFiles(ids []string) error {
+	req := RequestBatch{
+		Ids: ids,
+	}
+	resp, err := c.client.R().
+		SetAuthToken(c.accessToken).
+		SetBody(&req).
+		Post(fmt.Sprintf("%s/drive/v1/files:batchDelete", PIKPAK_API_HOST))
+	if err != nil {
+		return err
+	}
+	return errRespToError(resp.Body())
+}
+
+func (c *PikPakClient) EmptyTrash() error {
+	resp, err := c.client.R().
+		SetAuthToken(c.accessToken).
+		Patch(fmt.Sprintf("%s/drive/v1/files/trash:empty", PIKPAK_API_HOST))
+	if err != nil {
+		return err
+	}
+	return errRespToError(resp.Body())
+}
+
+func errRespToError(body []byte) error {
+	pikpakErr := Error{}
+	err := json.Unmarshal(body, &pikpakErr)
+	if err != nil {
+		return nil
+	} else if pikpakErr.Code != 0 && pikpakErr.Reason != "" {
+		return errors.New(pikpakErr.Error())
+	}
+	return nil
 }
