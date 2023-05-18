@@ -53,6 +53,7 @@ const (
 	UploadTypeResumable = "UPLOAD_TYPE_RESUMABLE"
 	FolderTypeDownload  = "DOWNLOAD"
 	FileTypeOffline     = "offline"
+	CreateTypeRetry     = "RETRY"
 	ListLimit           = 100
 )
 
@@ -489,6 +490,12 @@ type RequestTaskList struct {
 	NextPageToken string `json:"next_page_token,omitempty"`
 	Filters       string `json:"filters,omitempty"`
 	FileType      string `json:"type,omitempty"`
+}
+
+type RequestTaskRetry struct {
+	Id         string `json:"id"`
+	Type       string `json:"type"`
+	CreateType string `json:"create_type"`
 }
 
 // RequestShare is to request for file share

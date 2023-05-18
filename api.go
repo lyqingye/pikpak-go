@@ -220,6 +220,35 @@ func (c *PikPakClient) OfflineList(limit int, nextPageToken string) (*TaskList, 
 	return &result, nil
 }
 
+func (c *PikPakClient) OfflineRetry(taskId string) error {
+	req := RequestTaskRetry{
+		Id:         taskId,
+		Type:       FileTypeOffline,
+		CreateType: CreateTypeRetry,
+	}
+	bz, err := json.Marshal(&req)
+	if err != nil {
+		return err
+	}
+	reqParams := make(map[string]string)
+	err = json.Unmarshal(bz, &reqParams)
+	if err != nil {
+		return err
+	}
+	resp, err := c.client.R().
+		SetQueryParams(reqParams).
+		SetAuthToken(c.accessToken).
+		Get(fmt.Sprintf("%s/drive/v1/task", PIKPAK_API_HOST))
+	if err != nil {
+		return err
+	}
+	if resp.IsSuccess() {
+		return nil
+	} else {
+		return fmt.Errorf("retry task err! code: %d detail: %s", resp.StatusCode(), string(resp.Body()))
+	}
+}
+
 func (c *PikPakClient) OfflineListIterator(callback func(task *Task) bool) error {
 	nextPageToken := ""
 	pageSize := 100
