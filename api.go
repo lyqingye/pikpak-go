@@ -341,12 +341,30 @@ func (c *PikPakClient) EmptyTrash() error {
 	return errRespToError(resp.Body())
 }
 
+func (c *PikPakClient) About() (*About, error) {
+	info := About{}
+	resp, err := c.client.R().
+		SetAuthToken(c.accessToken).
+		SetResult(&info).
+		Get(fmt.Sprintf("%s/drive/v1/about", PIKPAK_API_HOST))
+	if err != nil {
+		return &info, err
+	}
+	return &info, errRespToError(resp.Body())
+}
+
 func errRespToError(body []byte) error {
 	pikpakErr := Error{}
 	err := json.Unmarshal(body, &pikpakErr)
 	if err != nil {
 		return nil
 	} else if pikpakErr.Code != 0 && pikpakErr.Reason != "" {
+		switch pikpakErr.Reason {
+		case "file_space_not_enough":
+			return ErrSpaceNotEnough
+		case "task_daily_create_limit":
+			return ErrDailyCreateLimit
+		}
 		return errors.New(pikpakErr.Error())
 	}
 	return nil

@@ -1,6 +1,7 @@
 package pikpakgo
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -33,6 +34,11 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 	*t = Time(newT)
 	return nil
 }
+
+var (
+	ErrSpaceNotEnough   = errors.New("space not enough")
+	ErrDailyCreateLimit = errors.New("daily create limit")
+)
 
 // Types of things in Item
 const (
@@ -393,12 +399,12 @@ type About struct {
 
 // Quota informs drive quota
 type Quota struct {
-	Kind           string `json:"kind,omitempty"`                  // "drive#quota"
-	Limit          int64  `json:"limit,omitempty,string"`          // limit in bytes
-	Usage          int64  `json:"usage,omitempty,string"`          // bytes in use
-	UsageInTrash   int64  `json:"usage_in_trash,omitempty,string"` // bytes in trash but this seems not working
-	PlayTimesLimit string `json:"play_times_limit,omitempty"`      // maybe in seconds
-	PlayTimesUsage string `json:"play_times_usage,omitempty"`      // maybe in seconds
+	Kind           string `json:"kind,omitempty"`                    // "drive#quota"
+	Limit          int64  `json:"limit,omitempty,string"`            // limit in bytes
+	Usage          int64  `json:"usage,omitempty,string"`            // bytes in use
+	UsageInTrash   int64  `json:"usage_in_trash,omitempty,string"`   // bytes in trash but this seems not working
+	PlayTimesLimit int64  `json:"play_times_limit,omitempty,string"` // maybe in seconds
+	PlayTimesUsage int64  `json:"play_times_usage,omitempty,string"` // maybe in seconds
 }
 
 // Share is a response to RequestShare

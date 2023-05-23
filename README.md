@@ -16,6 +16,7 @@ If you have any other API requirements, please leave a message and I will use my
 - [x] BatchDeleteFile
 - [x] BatchTrashFile
 - [x] EmptyTrash
+- [x] StorageInfo
 
 # Work in progress
 - [ ] MoveFile
