@@ -173,7 +173,7 @@ func (c *PikPakClient) OfflineDownload(name string, fileUrl string, parentId str
 		FolderType: folderType,
 	}
 	task := NewTask{}
-	_, err := c.client.R().
+	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
 		SetResult(&task).
 		SetBody(&req).
@@ -181,7 +181,7 @@ func (c *PikPakClient) OfflineDownload(name string, fileUrl string, parentId str
 	if err != nil {
 		return nil, err
 	}
-	return &task, nil
+	return &task, errRespToError(resp.Body())
 }
 
 func (c *PikPakClient) OfflineList(limit int, nextPageToken string) (*TaskList, error) {
@@ -212,7 +212,7 @@ func (c *PikPakClient) OfflineList(limit int, nextPageToken string) (*TaskList, 
 	}
 
 	result := TaskList{}
-	_, err = c.client.R().
+	resp, err := c.client.R().
 		SetQueryParams(reqParams).
 		SetResult(&result).
 		SetAuthToken(c.accessToken).
@@ -220,7 +220,7 @@ func (c *PikPakClient) OfflineList(limit int, nextPageToken string) (*TaskList, 
 	if err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &result, errRespToError(resp.Body())
 }
 
 func (c *PikPakClient) OfflineRetry(taskId string) error {
@@ -238,14 +238,14 @@ func (c *PikPakClient) OfflineRetry(taskId string) error {
 	if err != nil {
 		return err
 	}
-	_, err = c.client.R().
+	resp, err := c.client.R().
 		SetQueryParams(reqParams).
 		SetAuthToken(c.accessToken).
 		Get(fmt.Sprintf("%s/drive/v1/task", PIKPAK_API_HOST))
 	if err != nil {
 		return err
 	}
-	return nil
+	return errRespToError(resp.Body())
 }
 
 func (c *PikPakClient) OfflineListIterator(callback func(task *Task) bool) error {
