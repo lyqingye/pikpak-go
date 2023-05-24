@@ -627,3 +627,8 @@ type InviteInfo struct {
 	InvitedDays int  `json:"invited_days"`
 	Updated     bool `json:"updated"`
 }
+
+type FileTreeNode struct {
+	Paths []string
+	File  *File
+}

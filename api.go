@@ -188,6 +188,24 @@ func (c *PikPakClient) FileList(limit int, parentId string, nextPageToken string
 	return &result, nil
 }
 
+func (c *PikPakClient) FileListAll(fileId string) ([]*File, error) {
+	pageSize := 100
+	nextPageToken := ""
+	var files []*File
+	for {
+		ls, err := c.FileList(pageSize, fileId, nextPageToken)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, ls.Files...)
+		if ls.NextPageToken == "" {
+			break
+		}
+		nextPageToken = ls.NextPageToken
+	}
+	return files, nil
+}
+
 func (c *PikPakClient) GetFile(id string) (*File, error) {
 	file := File{}
 	_, err := c.client.R().
@@ -472,6 +490,40 @@ func (c *PikPakClient) InviteInfo() (*InviteInfo, error) {
 		SetResult(&result).
 		Post(fmt.Sprintf("%s/vip/v1/activity/invite", PikpakDriveHost))
 	return &result, errRespToError(resp.Body())
+}
+
+func (c *PikPakClient) WalkDir(fileId string, fn func(file *File) bool) error {
+	rootFile, err := c.GetFile(fileId)
+	if err != nil {
+		return err
+	}
+	stack := []*FileTreeNode{
+		{
+			Paths: []string{},
+			File:  rootFile,
+		},
+	}
+	for len(stack) > 0 {
+		node := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if fn(node.File) {
+			return nil
+		}
+		if node.File.Kind == KindOfFolder {
+			fileList, err := c.FileListAll(node.File.ID)
+			if err != nil {
+				return err
+			}
+			// using for callback
+			for _, f := range fileList {
+				stack = append(stack, &FileTreeNode{
+					Paths: append(node.Paths, node.File.Name),
+					File:  f,
+				})
+			}
+		}
+	}
+	return nil
 }
 
 func errRespToError(body []byte) error {
