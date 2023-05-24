@@ -475,10 +475,30 @@ type RequestLogin struct {
 type ResponseLogin struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
+	Sub          string `json:"sub"`
 }
 
 type RequestLogout struct {
 	Token string `json:"token,omitempty"`
+}
+type CaptchaMeta struct {
+	CaptchaSign   string `json:"captcha_sign"`
+	ClientVersion string `json:"client_version"`
+	PackageName   string `json:"package_name"`
+	Timestamp     string `json:"timestamp"`
+	UserID        string `json:"user_id"`
+}
+type RequestGetCaptcha struct {
+	Action      string      `json:"action"`
+	ClientID    string      `json:"client_id"`
+	DeviceID    string      `json:"device_id"`
+	Meta        CaptchaMeta `json:"meta"`
+	RedirectURI string      `json:"redirect_uri"`
+}
+
+type ResponseGetCaptcha struct {
+	CaptchaToken string `json:"captcha_token"`
+	ExpiresIn    int    `json:"expires_in"`
 }
 
 type RequestFileList struct {
@@ -577,4 +597,33 @@ type ArchiveFileList struct {
 	FileSize    int64            `json:"file_size,omitempty"`
 	Gcid        string           `json:"gcid,omitempty"` // same as File.Hash
 	Files       []*FileInArchive `json:"files,omitempty"`
+}
+
+type MeInfo struct {
+	Sub       string `json:"sub"`
+	Name      string `json:"name"`
+	Picture   string `json:"picture"`
+	Email     string `json:"email"`
+	Providers []struct {
+		ID             string `json:"id"`
+		ProviderUserID string `json:"provider_user_id"`
+		Name           string `json:"name"`
+	} `json:"providers"`
+	Password          string    `json:"password"`
+	Status            string    `json:"status"`
+	CreatedAt         time.Time `json:"created_at"`
+	PasswordUpdatedAt time.Time `json:"password_updated_at"`
+}
+
+type InviteInfo struct {
+	CheckFreeSend string `json:"check_free_send"`
+	Data          struct {
+		Expire string `json:"expire"`
+		Status string `json:"status"`
+		Type   string `json:"type"`
+		UserID string `json:"user_id"`
+	} `json:"data"`
+	FreeDays    int  `json:"free_days"`
+	InvitedDays int  `json:"invited_days"`
+	Updated     bool `json:"updated"`
 }

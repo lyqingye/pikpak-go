@@ -106,3 +106,15 @@ func (suite *TestPikpakSuite) TestGetAbout() {
 	suite.NoError(err)
 	suite.NotNil(info)
 }
+
+func (suite *TestPikpakSuite) TestGetMe() {
+	info, err := suite.client.Me()
+	suite.NoError(err)
+	suite.NotNil(info)
+}
+
+func (suite *TestPikpakSuite) TestGetInviteInfo() {
+	info, err := suite.client.InviteInfo()
+	suite.NoError(err)
+	suite.NotNil(info)
+}
