@@ -34,18 +34,20 @@ func (suite *TestPikpakSuite) TestListFile() {
 }
 
 func (suite *TestPikpakSuite) TestGetDownloadUrl() {
-	files, err := suite.client.FileList(100, "VNRNKzrKLmyyGDe21AoJR1VAo1", "")
+	files, err := suite.client.FileList(100, "", "")
 	suite.NoError(err)
 	suite.NotNil(files)
 	suite.NotEmpty(files.Files)
 	for _, f := range files.Files {
 		println(fmt.Sprintf("%s %s", f.Kind, f.ID))
 	}
-	suite.client.GetDownloadUrl("VNTyZBgvrOil_IUi2Hooqanuo1")
+	url, err := suite.client.GetDownloadUrl("VNWHVrXMz4En2yoLs_x-Uf_Ko1")
+	suite.NoError(err)
+	println(url)
 }
 
 func (suite *TestPikpakSuite) TestOfflineDownload() {
-	task, err := suite.client.OfflineDownload("test", "magnet:?xt=urn:btih:4611b654797ca2bc4bc48468301d35b5fe1bdc2c&tr=http%3a%2f%2ft.nyaatracker.com%2fannounce&tr=http%3a%2f%2ftracker.kamigami.org%3a2710%2fannounce&tr=http%3a%2f%2fshare.camoe.cn%3a8080%2fannounce&tr=http%3a%2f%2fopentracker.acgnx.se%2fannounce&tr=http%3a%2f%2fanidex.moe%3a6969%2fannounce&tr=http%3a%2f%2ft.acg.rip%3a6699%2fannounce&tr=https%3a%2f%2ftr.bangumi.moe%3a9696%2fannounce&tr=udp%3a%2f%2ftr.bangumi.moe%3a6969%2fannounce&tr=http%3a%2f%2fopen.acgtracker.com%3a1096%2fannounce&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce", "")
+	task, err := suite.client.OfflineDownload("test", "magnet:?xt=urn:btih:bce204d9d53d7c843856b0b17c1d5dc1478d1cd5&tr=http%3a%2f%2ft.nyaatracker.com%2fannounce&tr=http%3a%2f%2ftracker.kamigami.org%3a2710%2fannounce&tr=http%3a%2f%2fshare.camoe.cn%3a8080%2fannounce&tr=http%3a%2f%2fopentracker.acgnx.se%2fannounce&tr=http%3a%2f%2fanidex.moe%3a6969%2fannounce&tr=http%3a%2f%2ft.acg.rip%3a6699%2fannounce&tr=https%3a%2f%2ftr.bangumi.moe%3a9696%2fannounce&tr=udp%3a%2f%2ftr.bangumi.moe%3a6969%2fannounce&tr=http%3a%2f%2fopen.acgtracker.com%3a1096%2fannounce&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce", "")
 	suite.NoError(err)
 	println(task.Task.ID)
 	suite.NotEmpty(task.Task.ID)

@@ -146,6 +146,10 @@ func (c *PikPakClient) Logout() error {
 }
 
 func (c *PikPakClient) FileList(limit int, parentId string, nextPageToken string) (*FileList, error) {
+	err := c.CaptchaToken("GET:/drive/v1/files/")
+	if err != nil {
+		return nil, err
+	}
 	filters := Filters{
 		Phase: map[string]string{
 			"eq": PhaseTypeComplete,
@@ -181,6 +185,8 @@ func (c *PikPakClient) FileList(limit int, parentId string, nextPageToken string
 		SetQueryParams(reqParams).
 		SetResult(&result).
 		SetAuthToken(c.accessToken).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Get(fmt.Sprintf("%s/drive/v1/files", PikpakDriveHost))
 	if err != nil {
 		return nil, err
@@ -207,27 +213,39 @@ func (c *PikPakClient) FileListAll(fileId string) ([]*File, error) {
 }
 
 func (c *PikPakClient) GetFile(id string) (*File, error) {
+	err := c.CaptchaToken("GET:/drive/v1/files/")
+	if err != nil {
+		return nil, err
+	}
 	file := File{}
-	_, err := c.client.R().
+	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
 		SetResult(&file).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Get(fmt.Sprintf("%s/drive/v1/files/%s?usage=FETCH", PikpakDriveHost, id))
 	if err != nil {
 		return nil, err
 	}
-	return &file, err
+	return &file, errRespToError(resp.Body())
 }
 
 func (c *PikPakClient) GetDownloadUrl(id string) (string, error) {
+	err := c.CaptchaToken("GET:/drive/v1/files/")
+	if err != nil {
+		return "", err
+	}
 	file := File{}
-	_, err := c.client.R().
+	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
 		SetResult(&file).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Get(fmt.Sprintf("%s/drive/v1/files/%s?usage=FETCH", PikpakDriveHost, id))
 	if err != nil {
 		return "", err
 	}
-	return file.WebContentLink, err
+	return file.WebContentLink, errRespToError(resp.Body())
 }
 
 func (c *PikPakClient) OfflineDownload(name string, fileUrl string, parentId string) (*NewTask, error) {
@@ -245,9 +263,15 @@ func (c *PikPakClient) OfflineDownload(name string, fileUrl string, parentId str
 		},
 		FolderType: folderType,
 	}
+	err := c.CaptchaToken("POST:/drive/v1/files")
+	if err != nil {
+		return nil, err
+	}
 	task := NewTask{}
 	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		SetResult(&task).
 		SetBody(&req).
 		Post(fmt.Sprintf("%s/drive/v1/files", PikpakDriveHost))
@@ -284,11 +308,18 @@ func (c *PikPakClient) OfflineList(limit int, nextPageToken string) (*TaskList, 
 		return nil, err
 	}
 
+	err = c.CaptchaToken("GET:/drive/v1/tasks")
+	if err != nil {
+		return nil, err
+	}
+
 	result := TaskList{}
 	resp, err := c.client.R().
 		SetQueryParams(reqParams).
 		SetResult(&result).
 		SetAuthToken(c.accessToken).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Get(fmt.Sprintf("%s/drive/v1/tasks", PikpakDriveHost))
 	if err != nil {
 		return nil, err
@@ -297,6 +328,10 @@ func (c *PikPakClient) OfflineList(limit int, nextPageToken string) (*TaskList, 
 }
 
 func (c *PikPakClient) OfflineRetry(taskId string) error {
+	err := c.CaptchaToken("GET:/drive/v1/task")
+	if err != nil {
+		return err
+	}
 	req := RequestTaskRetry{
 		Id:         taskId,
 		Type:       FileTypeOffline,
@@ -314,6 +349,8 @@ func (c *PikPakClient) OfflineRetry(taskId string) error {
 	resp, err := c.client.R().
 		SetQueryParams(reqParams).
 		SetAuthToken(c.accessToken).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Get(fmt.Sprintf("%s/drive/v1/task", PikpakDriveHost))
 	if err != nil {
 		return err
@@ -377,12 +414,18 @@ func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout tim
 }
 
 func (c *PikPakClient) BatchTrashFiles(ids []string) error {
+	err := c.CaptchaToken("POST:/drive/v1/files:batchTrash")
+	if err != nil {
+		return err
+	}
 	req := RequestBatch{
 		Ids: ids,
 	}
 	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
 		SetBody(&req).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Post(fmt.Sprintf("%s/drive/v1/files:batchTrash", PikpakDriveHost))
 	if err != nil {
 		return err
@@ -391,12 +434,18 @@ func (c *PikPakClient) BatchTrashFiles(ids []string) error {
 }
 
 func (c *PikPakClient) BatchDeleteFiles(ids []string) error {
+	err := c.CaptchaToken("POST:/drive/v1/files:batchDelete")
+	if err != nil {
+		return err
+	}
 	req := RequestBatch{
 		Ids: ids,
 	}
 	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
 		SetBody(&req).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Post(fmt.Sprintf("%s/drive/v1/files:batchDelete", PikpakDriveHost))
 	if err != nil {
 		return err
@@ -405,8 +454,14 @@ func (c *PikPakClient) BatchDeleteFiles(ids []string) error {
 }
 
 func (c *PikPakClient) EmptyTrash() error {
+	err := c.CaptchaToken("PATCH:/drive/v1/files/trash:empty")
+	if err != nil {
+		return err
+	}
 	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Patch(fmt.Sprintf("%s/drive/v1/files/trash:empty", PikpakDriveHost))
 	if err != nil {
 		return err
@@ -415,10 +470,16 @@ func (c *PikPakClient) EmptyTrash() error {
 }
 
 func (c *PikPakClient) About() (*About, error) {
+	err := c.CaptchaToken("GET:/drive/v1/about")
+	if err != nil {
+		return nil, err
+	}
 	info := About{}
 	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
 		SetResult(&info).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		Get(fmt.Sprintf("%s/drive/v1/about", PikpakDriveHost))
 	if err != nil {
 		return &info, err
@@ -468,6 +529,7 @@ func (c *PikPakClient) Me() (*MeInfo, error) {
 	resp, err := c.client.R().
 		SetAuthToken(c.accessToken).
 		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
 		SetResult(&result).
 		Get(fmt.Sprintf("%s/v1/user/me", PikpakUserHost))
 	return &result, errRespToError(resp.Body())
