@@ -405,7 +405,7 @@ func (c *PikPakClient) OfflineRemove(taskId []string, deleteFiles bool) error {
 
 func (c *PikPakClient) OfflineListIterator(callback func(task *Task) bool) error {
 	nextPageToken := ""
-	pageSize := 100
+	pageSize := 10000
 Exit:
 	for {
 		taskList, err := c.OfflineList(pageSize, nextPageToken)
