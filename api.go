@@ -438,7 +438,7 @@ func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout tim
 			if lastErr != nil {
 				return nil, lastErr
 			}
-			return nil, errors.New("wait for offline download complete timeout")
+			return nil, ErrWaitForOfflineDownloadTimeout
 		}
 		lastErr = c.OfflineListIterator(func(task *Task) bool {
 			if task.ID == taskId {
