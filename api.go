@@ -204,7 +204,7 @@ func (c *PikPakClient) FileListAll(fileId string) ([]*File, error) {
 			return nil, err
 		}
 		files = append(files, ls.Files...)
-		if ls.NextPageToken == "" {
+		if len(ls.Files) < pageSize || ls.NextPageToken == "" {
 			break
 		}
 		nextPageToken = ls.NextPageToken
@@ -405,7 +405,7 @@ func (c *PikPakClient) OfflineRemove(taskId []string, deleteFiles bool) error {
 
 func (c *PikPakClient) OfflineListIterator(callback func(task *Task) bool) error {
 	nextPageToken := ""
-	pageSize := 100
+	pageSize := 10000
 Exit:
 	for {
 		taskList, err := c.OfflineList(pageSize, nextPageToken)
@@ -417,7 +417,7 @@ Exit:
 				break Exit
 			}
 		}
-		if len(taskList.Tasks) < pageSize {
+		if len(taskList.Tasks) < pageSize || taskList.NextPageToken == ""{
 			break Exit
 		}
 		nextPageToken = taskList.NextPageToken
