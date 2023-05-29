@@ -230,6 +230,30 @@ func (c *PikPakClient) GetFile(id string) (*File, error) {
 	return &file, errRespToError(resp.Body())
 }
 
+func (c *PikPakClient) CreateFolder(name string, parentId string) (*File, error) {
+	params := map[string]string{
+		"kind":      KindOfFolder,
+		"name":      name,
+		"parent_id": parentId,
+	}
+	err := c.CaptchaToken("POST:/drive/v1/files")
+	if err != nil {
+		return nil, err
+	}
+	var result NewFile
+	resp, err := c.client.R().
+		SetAuthToken(c.accessToken).
+		SetBody(&params).
+		SetResult(&result).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
+		Post(fmt.Sprintf("%s/drive/v1/files", PikpakDriveHost))
+	if err != nil {
+		return nil, err
+	}
+	return result.File, errRespToError(resp.Body())
+}
+
 func (c *PikPakClient) GetDownloadUrl(id string) (string, error) {
 	err := c.CaptchaToken("GET:/drive/v1/files/")
 	if err != nil {
@@ -358,6 +382,27 @@ func (c *PikPakClient) OfflineRetry(taskId string) error {
 	return errRespToError(resp.Body())
 }
 
+func (c *PikPakClient) OfflineRemove(taskId []string, deleteFiles bool) error {
+	err := c.CaptchaToken("DELETE:/drive/v1/tasks")
+	if err != nil {
+		return err
+	}
+	params := map[string]string{
+		"task_ids":     strings.Join(taskId, ","),
+		"delete_files": strconv.FormatBool(deleteFiles),
+	}
+	resp, err := c.client.R().
+		SetQueryParams(params).
+		SetAuthToken(c.accessToken).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
+		Delete(fmt.Sprintf("%s/drive/v1/tasks", PikpakDriveHost))
+	if err != nil {
+		return err
+	}
+	return errRespToError(resp.Body())
+}
+
 func (c *PikPakClient) OfflineListIterator(callback func(task *Task) bool) error {
 	nextPageToken := ""
 	pageSize := 100
@@ -392,9 +437,8 @@ func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout tim
 		if time.Now().After(endTime) {
 			if lastErr != nil {
 				return nil, lastErr
-			} else {
-				return nil, errors.New("wait for offline download complete timeout")
 			}
+			return nil, errors.New("wait for offline download complete timeout")
 		}
 		lastErr = c.OfflineListIterator(func(task *Task) bool {
 			if task.ID == taskId {
@@ -453,6 +497,29 @@ func (c *PikPakClient) BatchDeleteFiles(ids []string) error {
 	return errRespToError(resp.Body())
 }
 
+func (c *PikPakClient) BatchMoveFiles(ids []string, folderId string) error {
+	err := c.CaptchaToken("POST:/drive/v1/files:batchMove")
+	if err != nil {
+		return err
+	}
+	req := RequestBatch{
+		Ids: ids,
+		To: map[string]string{
+			"parent_id": folderId,
+		},
+	}
+	resp, err := c.client.R().
+		SetAuthToken(c.accessToken).
+		SetBody(&req).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
+		Post(fmt.Sprintf("%s/drive/v1/files:batchMove", PikpakDriveHost))
+	if err != nil {
+		return err
+	}
+	return errRespToError(resp.Body())
+}
+
 func (c *PikPakClient) EmptyTrash() error {
 	err := c.CaptchaToken("PATCH:/drive/v1/files/trash:empty")
 	if err != nil {
@@ -467,6 +534,28 @@ func (c *PikPakClient) EmptyTrash() error {
 		return err
 	}
 	return errRespToError(resp.Body())
+}
+
+func (c *PikPakClient) RenameFile(id string, name string) (*File, error) {
+	err := c.CaptchaToken("PATCH:/drive/v1/files/")
+	if err != nil {
+		return nil, err
+	}
+	params := map[string]string{
+		"name": name,
+	}
+	file := File{}
+	resp, err := c.client.R().
+		SetAuthToken(c.accessToken).
+		SetBody(&params).
+		SetResult(&file).
+		SetHeader("x-captcha-token", c.captchaToken).
+		SetHeader("x-device-id", c.deviceId).
+		Patch(fmt.Sprintf("%s/drive/v1/files/%s", PikpakDriveHost, id))
+	if err != nil {
+		return nil, err
+	}
+	return &file, errRespToError(resp.Body())
 }
 
 func (c *PikPakClient) About() (*About, error) {
@@ -532,6 +621,9 @@ func (c *PikPakClient) Me() (*MeInfo, error) {
 		SetHeader("x-device-id", c.deviceId).
 		SetResult(&result).
 		Get(fmt.Sprintf("%s/v1/user/me", PikpakUserHost))
+	if err != nil {
+		return nil, err
+	}
 	return &result, errRespToError(resp.Body())
 }
 
@@ -551,6 +643,9 @@ func (c *PikPakClient) InviteInfo() (*InviteInfo, error) {
 		SetHeader("x-device-id", c.deviceId).
 		SetResult(&result).
 		Post(fmt.Sprintf("%s/vip/v1/activity/invite", PikpakDriveHost))
+	if err != nil {
+		return nil, err
+	}
 	return &result, errRespToError(resp.Body())
 }
 
@@ -599,6 +694,8 @@ func errRespToError(body []byte) error {
 			return ErrSpaceNotEnough
 		case "task_daily_create_limit":
 			return ErrDailyCreateLimit
+		case "file_duplicated_name":
+			return ErrFileDuplicateName
 		}
 		return errors.New(pikpakErr.Error())
 	}

@@ -8,13 +8,17 @@ If you have any other API requirements, please leave a message and I will use my
 - [x] Login
 - [x] FileList
 - [x] GetFile
+- [x] CreateFolder
+- [x] RenameFile
+- [x] BatchDeleteFile
+- [x] BatchTrashFile
+- [x] BatchMoveFile
 - [x] GetDownloadUrl
 - [x] OfflineDownload
 - [x] OfflineList
-- [x] WaitForOfflineDownloadComplete
 - [x] OfflineRetry
-- [x] BatchDeleteFile
-- [x] BatchTrashFile
+- [x] OfflineRemove
+- [x] WaitForOfflineDownloadComplete
 - [x] EmptyTrash
 - [x] StorageInfo
 - [x] CaptchaToken
@@ -22,8 +26,7 @@ If you have any other API requirements, please leave a message and I will use my
 - [x] MeInfo
 
 # Work in progress
-- [ ] MoveFile
-- [ ] BatchMoveFile
+- [ ] BatchUploadFiles
 
 # Reference project
 - https://github.com/rclone/rclone

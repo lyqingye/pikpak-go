@@ -88,6 +88,19 @@ func (suite *TestPikpakSuite) TestTaskRetry() {
 	}
 }
 
+func (suite *TestPikpakSuite) TestTaskRemove() {
+	tasks, err := suite.client.OfflineList(100, "")
+	suite.NoError(err)
+	suite.NotNil(tasks)
+	for _, task := range tasks.Tasks {
+		if task.Phase == pikpakgo.PhaseTypeComplete {
+			err = suite.client.OfflineRemove([]string{task.ID}, true)
+			suite.NoError(err)
+			break
+		}
+	}
+}
+
 func (suite *TestPikpakSuite) TestBatchTrashFiles() {
 	err := suite.client.BatchTrashFiles([]string{
 		"VNV9ua9L2OQzryfULN72j50to1",
@@ -101,6 +114,30 @@ func (suite *TestPikpakSuite) TestBatchDeleteFiles() {
 		"VNV9ua9L2OQzryfULN72j50to1",
 	})
 	suite.NoError(err)
+}
+
+func (suite *TestPikpakSuite) TestBatchMoveFiles() {
+	f1, err := suite.client.CreateFolder("f1", "")
+	suite.NoError(err)
+	suite.NotNil(f1)
+	defer func() {
+		err = suite.client.BatchDeleteFiles([]string{f1.ID})
+		suite.NoError(err)
+	}()
+	f2, err := suite.client.CreateFolder("f2", "")
+	suite.NoError(err)
+	suite.NotNil(f2)
+	defer func() {
+		err = suite.client.BatchDeleteFiles([]string{f2.ID})
+		suite.NoError(err)
+	}()
+
+	err = suite.client.BatchMoveFiles([]string{f2.ID}, f1.ID)
+	suite.NoError(err)
+	f2, err = suite.client.GetFile(f2.ID)
+	suite.NoError(err)
+	suite.NotNil(f2)
+	suite.Equal(f1.ID, f2.ParentID)
 }
 
 func (suite *TestPikpakSuite) TestGetAbout() {
@@ -119,4 +156,19 @@ func (suite *TestPikpakSuite) TestGetInviteInfo() {
 	info, err := suite.client.InviteInfo()
 	suite.NoError(err)
 	suite.NotNil(info)
+}
+
+func (suite *TestPikpakSuite) TestCreateFolder() {
+	f, err := suite.client.CreateFolder("test5", "")
+	suite.NoError(err)
+	suite.NotNil(f)
+	defer func() {
+		err = suite.client.BatchDeleteFiles([]string{f.ID})
+		suite.NoError(err)
+	}()
+	newFile, err := suite.client.RenameFile(f.ID, "renamed")
+	suite.NoError(err)
+	suite.NotNil(newFile)
+	suite.Equal(newFile.ID, f.ID)
+	suite.Equal(newFile.Name, "renamed")
 }

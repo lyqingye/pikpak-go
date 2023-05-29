@@ -36,8 +36,9 @@ func (t *Time) UnmarshalJSON(data []byte) error {
 }
 
 var (
-	ErrSpaceNotEnough   = errors.New("space not enough")
-	ErrDailyCreateLimit = errors.New("daily create limit")
+	ErrSpaceNotEnough    = errors.New("space not enough")
+	ErrDailyCreateLimit  = errors.New("daily create limit")
+	ErrFileDuplicateName = errors.New("file duplicate name")
 )
 
 // Types of things in Item
