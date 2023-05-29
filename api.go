@@ -204,7 +204,7 @@ func (c *PikPakClient) FileListAll(fileId string) ([]*File, error) {
 			return nil, err
 		}
 		files = append(files, ls.Files...)
-		if ls.NextPageToken == "" {
+		if len(ls.Files) < pageSize || ls.NextPageToken == "" {
 			break
 		}
 		nextPageToken = ls.NextPageToken
@@ -417,7 +417,7 @@ Exit:
 				break Exit
 			}
 		}
-		if taskList.NextPageToken == ""{
+		if len(taskList.Tasks) < pageSize || taskList.NextPageToken == ""{
 			break Exit
 		}
 		nextPageToken = taskList.NextPageToken
