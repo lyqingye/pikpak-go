@@ -417,7 +417,7 @@ Exit:
 				break Exit
 			}
 		}
-		if len(taskList.Tasks) < pageSize {
+		if taskList.NextPageToken == ""{
 			break Exit
 		}
 		nextPageToken = taskList.NextPageToken
