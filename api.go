@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -417,12 +418,29 @@ Exit:
 				break Exit
 			}
 		}
-		if len(taskList.Tasks) < pageSize || taskList.NextPageToken == ""{
+		if len(taskList.Tasks) < pageSize || taskList.NextPageToken == "" {
 			break Exit
 		}
 		nextPageToken = taskList.NextPageToken
 	}
 	return nil
+}
+
+// OfflineRemoveAll remove offline tasks
+//   - phase
+//     PhaseTypeError...
+func (c *PikPakClient) OfflineRemoveAll(phase string, deleteFiles bool) error {
+	var taskIds []string
+	err := c.OfflineListIterator(func(task *Task) bool {
+		if phase == "" || task.Phase == phase {
+			taskIds = append(taskIds, task.ID)
+		}
+		return false
+	})
+	if err != nil {
+		return err
+	}
+	return c.OfflineRemove(taskIds, deleteFiles)
 }
 
 func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout time.Duration, progressFn func(*Task)) (*Task, error) {
@@ -681,6 +699,94 @@ func (c *PikPakClient) WalkDir(fileId string, fn func(file *File) bool) error {
 		}
 	}
 	return nil
+}
+
+func (c *PikPakClient) FileExists(absPath string) (bool, error) {
+	if !filepath.IsAbs(absPath) {
+		return false, errors.New("path is not absolute")
+	}
+	if absPath == "/" {
+		return true, nil
+	}
+
+	dirNames := strings.Split(absPath, "/")
+	dirId := ""
+
+	for _, dirName := range dirNames {
+		if dirName == "" {
+			continue
+		}
+		found := false
+		files, err := c.FileListAll(dirId)
+		if err != nil {
+			return false, err
+		}
+		for _, fi := range files {
+			if fi.Name == dirName {
+				found = true
+				dirId = fi.ID
+				break
+			}
+		}
+		if !found {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
+// FolderPathToID the path format: /home/test
+func (c *PikPakClient) FolderPathToID(absPath string, autoCreate bool) (string, error) {
+	if !filepath.IsAbs(absPath) {
+		return "", errors.New("path is not absolute")
+	}
+	if absPath == "/" {
+		return "", nil
+	}
+
+	dirNames := strings.Split(absPath, "/")
+	dirId := ""
+
+	for _, dirName := range dirNames {
+		if dirName == "" {
+			continue
+		}
+		dirFound := false
+		files, err := c.FileListAll(dirId)
+		if err != nil {
+			return "", err
+		}
+		for _, fi := range files {
+			if fi.Name == dirName {
+				if fi.Kind == KindOfFolder {
+					dirFound = true
+					dirId = fi.ID
+					break
+				} else {
+					return "", fmt.Errorf("the dir %s is file, not a dir", dirName)
+				}
+			}
+		}
+		if !dirFound && autoCreate {
+			newDir, err := c.CreateFolder(dirName, dirId)
+			if err != nil {
+				return "", err
+			}
+			dirId = newDir.ID
+		}
+		if !dirFound && !autoCreate {
+			return "", ErrFolderNotFound
+		}
+	}
+	return dirId, nil
+}
+
+func (c *PikPakClient) RemoveFolder(absPath string) error {
+	id, err := c.FolderPathToID(absPath, false)
+	if errors.Is(err, ErrFolderNotFound) {
+		return nil
+	}
+	return c.BatchDeleteFiles([]string{id})
 }
 
 func errRespToError(body []byte) error {

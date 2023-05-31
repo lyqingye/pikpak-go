@@ -172,3 +172,18 @@ func (suite *TestPikpakSuite) TestCreateFolder() {
 	suite.Equal(newFile.ID, f.ID)
 	suite.Equal(newFile.Name, "renamed")
 }
+
+func (suite *TestPikpakSuite) TestPathToID() {
+	testPath := "/home/test"
+	id, err := suite.client.FolderPathToID(testPath, true)
+	suite.NoError(err)
+	suite.NotEmpty(id)
+	exists, err := suite.client.FileExists("/home/test")
+	suite.NoError(err)
+	suite.True(exists)
+	err = suite.client.RemoveFolder("/home")
+	suite.NoError(err)
+	exists, err = suite.client.FileExists("/home")
+	suite.NoError(err)
+	suite.False(exists)
+}
