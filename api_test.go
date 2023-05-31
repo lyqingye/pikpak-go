@@ -187,3 +187,8 @@ func (suite *TestPikpakSuite) TestPathToID() {
 	suite.NoError(err)
 	suite.False(exists)
 }
+
+func (suite *TestPikpakSuite) TestOfflineRemoveAll() {
+	err := suite.client.OfflineRemoveAll([]string{pikpakgo.PhaseTypeError, pikpakgo.PhaseTypePending, pikpakgo.PhaseTypeRunning}, true)
+	suite.NoError(err)
+}

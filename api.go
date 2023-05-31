@@ -429,10 +429,17 @@ Exit:
 // OfflineRemoveAll remove offline tasks
 //   - phase
 //     PhaseTypeError...
-func (c *PikPakClient) OfflineRemoveAll(phase string, deleteFiles bool) error {
+func (c *PikPakClient) OfflineRemoveAll(phases []string, deleteFiles bool) error {
 	var taskIds []string
 	err := c.OfflineListIterator(func(task *Task) bool {
-		if phase == "" || task.Phase == phase {
+		found := false
+		for _, phase := range phases {
+			if task.Phase == phase {
+				found = true
+				break
+			}
+		}
+		if len(phases) == 0 || found {
 			taskIds = append(taskIds, task.ID)
 		}
 		return false
