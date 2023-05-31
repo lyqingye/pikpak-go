@@ -40,6 +40,7 @@ var (
 	ErrDailyCreateLimit              = errors.New("daily create limit")
 	ErrFileDuplicateName             = errors.New("file duplicate name")
 	ErrWaitForOfflineDownloadTimeout = errors.New("wait for offline download timeout")
+	ErrFolderNotFound                = errors.New("folder not found")
 )
 
 // Types of things in Item
