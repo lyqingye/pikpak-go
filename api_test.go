@@ -192,3 +192,21 @@ func (suite *TestPikpakSuite) TestOfflineRemoveAll() {
 	err := suite.client.OfflineRemoveAll([]string{pikpakgo.PhaseTypeError, pikpakgo.PhaseTypePending, pikpakgo.PhaseTypeRunning}, true)
 	suite.NoError(err)
 }
+
+func (suite *TestPikpakSuite) TestDeleteAllFiles() {
+	err := suite.client.OfflineRemoveAll([]string{pikpakgo.PhaseTypeError, pikpakgo.PhaseTypePending, pikpakgo.PhaseTypeRunning}, true)
+	suite.NoError(err)
+	files, err := suite.client.FileListAll("")
+	suite.NoError(err)
+	var ids []string
+	for _, fi := range files {
+		if fi.FolderType == pikpakgo.FolderTypeDownload {
+			continue
+		}
+		ids = append(ids, fi.ID)
+	}
+	err = suite.client.BatchDeleteFiles(ids)
+	suite.NoError(err)
+	err = suite.client.EmptyTrash()
+	suite.NoError(err)
+}

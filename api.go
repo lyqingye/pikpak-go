@@ -447,7 +447,10 @@ func (c *PikPakClient) OfflineRemoveAll(phases []string, deleteFiles bool) error
 	if err != nil {
 		return err
 	}
-	return c.OfflineRemove(taskIds, deleteFiles)
+	if len(taskIds) > 0 {
+		return c.OfflineRemove(taskIds, deleteFiles)
+	}
+	return nil
 }
 
 func (c *PikPakClient) WaitForOfflineDownloadComplete(taskId string, timeout time.Duration, progressFn func(*Task)) (*Task, error) {
