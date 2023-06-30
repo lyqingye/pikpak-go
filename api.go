@@ -168,7 +168,7 @@ func (c *PikPakClient) FileList(limit int, parentId string, nextPageToken string
 		ThumbnailSize: ThumbnailSizeM,
 		Limit:         strconv.Itoa(limit),
 		WithAudit:     strconv.FormatBool(true),
-		NextPageToken: nextPageToken,
+		PageToken:     nextPageToken,
 		Filters:       string(filtersBz),
 	}
 	bz, err := json.Marshal(&req)

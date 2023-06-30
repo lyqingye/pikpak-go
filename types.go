@@ -509,7 +509,7 @@ type RequestFileList struct {
 	ThumbnailSize string `json:"thumbnail_size,omitempty"`
 	Limit         string `json:"limit,omitempty"`
 	WithAudit     string `json:"with_audit,omitempty"`
-	NextPageToken string `json:"next_page_token,omitempty"`
+	PageToken     string `json:"page_token,omitempty"`
 	Filters       string `json:"filters,omitempty"`
 }
 
