@@ -2,12 +2,21 @@ package pikpakgo_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
 	pikpakgo "github.com/lyqingye/pikpak-go"
 
 	"github.com/stretchr/testify/suite"
+)
+
+var (
+	username = os.Getenv("PIKPAK_USERNAME")
+	password = os.Getenv("PIKPAK_PASSWORD")
+
+	// getAllFileFieldId: Make sure your field contains 100+ files. leave this env empty to skip get all files test.
+	getAllFileFieldId = os.Getenv("PIKPAK_ALL_FILE_FIELD_ID")
 )
 
 type TestPikpakSuite struct {
@@ -20,7 +29,7 @@ func TestPikpakAPI(t *testing.T) {
 }
 
 func (suite *TestPikpakSuite) SetupTest() {
-	client, err := pikpakgo.NewPikPakClient("", "")
+	client, err := pikpakgo.NewPikPakClient(username, password)
 	suite.NoError(err)
 	err = client.Login()
 	suite.NoError(err)
@@ -209,4 +218,15 @@ func (suite *TestPikpakSuite) TestDeleteAllFiles() {
 	suite.NoError(err)
 	err = suite.client.EmptyTrash()
 	suite.NoError(err)
+}
+
+func (suite *TestPikpakSuite) TestGetAllFiles() {
+	if getAllFileFieldId == "" {
+		return
+	}
+	files, err := suite.client.FileListAll(getAllFileFieldId)
+	suite.NoError(err)
+	suite.NotEmpty(files)
+	// Make sure your field contains 100+ files
+	suite.Greater(len(files), 100)
 }
