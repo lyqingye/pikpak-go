@@ -98,7 +98,10 @@ func NewPikPakClient(username, password string) (*PikPakClient, error) {
 
 	client.AddRetryCondition(func(r *resty.Response, err error) bool {
 		if strings.Contains(string(r.Body()), "unauthenticated") {
-			return pikpak.Login() != nil
+			if err := pikpak.Login(); err != nil {
+				return false
+			}
+			r.Request.SetAuthToken(pikpak.accessToken)
 		}
 		if err == nil {
 			return false
